@@ -69,7 +69,7 @@
                     <input type="text" name="client_name" id="client_name" value="{{ old('client_name', $appointment->client_name) }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     <div class="mt-1 text-sm text-gray-500">
-                        Para clientes não cadastrados no sistema
+                        Para servidores não cadastrados no sistema
                     </div>
                 </div>
             </div>

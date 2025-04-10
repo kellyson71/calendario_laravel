@@ -40,22 +40,23 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Cliente Cadastrado</label>
-                    <select name="client_id" id="client_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        onchange="clientSelectedHandler(this.value)">
-                        <option value="">Selecione um cliente...</option>
-                        @foreach($clients as $client)
-                        <option value="{{ $client->id }}" {{ old('client_id', $selectedClientId) == $client->id ? 'selected' : '' }}>
-                            {{ $client->name }} {{ $client->phone ? '- ' . $client->phone : '' }}
-                        </option>
-                        @endforeach
-                    </select>
-                    <div class="mt-1 text-sm text-gray-500">
-                        <a href="{{ route('clients.create') }}" class="text-blue-600 hover:underline" target="_blank">
-                            <i class="fas fa-plus-circle"></i> Cadastrar novo cliente
-                        </a>
+                    <label for="client_search" class="block text-sm font-medium text-gray-700 mb-1">Cliente Cadastrado</label>
+                    <div class="relative">
+                        <input type="text" id="client_search" placeholder="Digite o nome do cliente..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <input type="hidden" name="client_id" id="client_id" value="{{ old('client_id', $selectedClientId) }}">
+
+                        <div id="client_results" class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 hidden max-h-60 overflow-y-auto">
+                        </div>
+
+                        <div id="no_results" class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 hidden p-3">
+                            <p class="text-gray-600 mb-2">Nenhum cliente encontrado com este nome</p>
+                            <button type="button" id="create_client_btn" class="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 text-sm flex items-center justify-center">
+                                <i class="fas fa-plus-circle mr-2"></i> Criar novo cliente
+                            </button>
+                        </div>
                     </div>
+                    <div class="mt-1 text-sm text-gray-500" id="selected_client_info"></div>
                 </div>
 
                 <div class="mb-4">
@@ -63,7 +64,7 @@
                     <input type="text" name="client_name" id="client_name" value="{{ old('client_name') }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     <div class="mt-1 text-sm text-gray-500">
-                        Para clientes não cadastrados no sistema
+                        Para servidores não cadastrados no sistema
                     </div>
                 </div>
             </div>
@@ -110,20 +111,110 @@
 
 @section('scripts')
 <script>
-    function clientSelectedHandler(clientId) {
-        // Se um cliente foi selecionado, limpa o campo de nome avulso
-        if (clientId) {
-            document.getElementById('client_name').value = '';
-            document.getElementById('client_name').disabled = true;
-        } else {
-            document.getElementById('client_name').disabled = false;
+    // Lista de todos os clientes para o autocomplete
+    const allClients = JSON.parse('{!! json_encode($clients->map(function($client) { return ["id" => $client->id, "name" => $client->name, "phone" => $client->phone ?? "", "display" => $client->name . ($client->phone ? " - " . $client->phone : "")]; })) !!}');
+
+    // Elementos do DOM
+    const clientSearchInput = document.getElementById('client_search');
+    const clientIdInput = document.getElementById('client_id');
+    const clientResults = document.getElementById('client_results');
+    const noResults = document.getElementById('no_results');
+    const createClientBtn = document.getElementById('create_client_btn');
+    const clientNameInput = document.getElementById('client_name');
+    const selectedClientInfo = document.getElementById('selected_client_info');
+
+    // Ao digitar, filtra os clientes e mostra os resultados
+    clientSearchInput.addEventListener('input', function() {
+        const searchText = this.value.toLowerCase().trim();
+
+        if (searchText === '') {
+            clientResults.classList.add('hidden');
+            noResults.classList.add('hidden');
+            return;
         }
+
+        // Filtrar os clientes pelo texto de busca
+        const filteredClients = allClients.filter(client =>
+            client.name.toLowerCase().includes(searchText) ||
+            (client.phone && client.phone.includes(searchText))
+        );
+
+        // Se não encontrar resultados
+        if (filteredClients.length === 0) {
+            clientResults.classList.add('hidden');
+            noResults.classList.remove('hidden');
+            return;
+        }
+
+        // Mostrar os resultados encontrados
+        clientResults.innerHTML = '';
+        filteredClients.forEach(client => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'px-4 py-2 hover:bg-blue-50 cursor-pointer';
+            resultItem.textContent = client.display;
+            resultItem.addEventListener('click', () => selectClient(client));
+            clientResults.appendChild(resultItem);
+        });
+
+        clientResults.classList.remove('hidden');
+        noResults.classList.add('hidden');
+    });
+
+    // Função para selecionar um cliente
+    function selectClient(client) {
+        clientIdInput.value = client.id;
+        clientSearchInput.value = client.name;
+        clientResults.classList.add('hidden');
+
+        // Atualiza a informação do cliente selecionado
+        selectedClientInfo.innerHTML = `<span class="text-blue-600"><i class="fas fa-check-circle"></i> Cliente selecionado: ${client.display}</span>`;
+
+        // Desabilita o campo de nome avulso
+        clientNameInput.value = '';
+        clientNameInput.disabled = true;
     }
 
-    // Executar ao carregar a página
+    // Botão para criar novo cliente
+    createClientBtn.addEventListener('click', function() {
+        const searchText = clientSearchInput.value.trim();
+        if (searchText) {
+            // Redireciona para a página de criação de cliente com o nome preenchido
+            window.location.href = "{{ route('clients.create') }}?name=" + encodeURIComponent(searchText) + "&redirect_to=appointments.create";
+        } else {
+            window.location.href = "{{ route('clients.create') }}?redirect_to=appointments.create";
+        }
+    });
+
+    // Clicar fora do autocomplete fecha os resultados
+    document.addEventListener('click', function(e) {
+        if (!clientSearchInput.contains(e.target) && !clientResults.contains(e.target) && !noResults.contains(e.target)) {
+            clientResults.classList.add('hidden');
+            noResults.classList.add('hidden');
+        }
+    });
+
+    // Verifica se já existe um cliente selecionado ao carregar a página
     document.addEventListener('DOMContentLoaded', function() {
-        const clientId = document.getElementById('client_id').value;
-        clientSelectedHandler(clientId);
+        const clientId = clientIdInput.value;
+        if (clientId) {
+            const selectedClient = allClients.find(client => client.id == clientId);
+            if (selectedClient) {
+                clientSearchInput.value = selectedClient.name;
+                selectedClientInfo.innerHTML = `<span class="text-blue-600"><i class="fas fa-check-circle"></i> Cliente selecionado: ${selectedClient.display}</span>`;
+                clientNameInput.disabled = true;
+            }
+        } else {
+            clientNameInput.disabled = false;
+        }
+    });
+
+    // Ao digitar no campo de nome avulso, limpa o cliente selecionado
+    clientNameInput.addEventListener('input', function() {
+        if (this.value.trim() !== '') {
+            clientIdInput.value = '';
+            clientSearchInput.value = '';
+            selectedClientInfo.innerHTML = '';
+        }
     });
 </script>
 @endsection

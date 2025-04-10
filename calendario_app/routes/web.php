@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     // Clientes
     Route::resource('clients', ClientController::class);
     Route::get('/clients/{client}/history', [ClientController::class, 'history'])->name('clients.history');
+    Route::get('/clients/{client}/print', [ClientController::class, 'printForm'])->name('clients.print_form');
 });
 
 // Rotas de administração

@@ -25,15 +25,15 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('appointments.create') }}" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 {{ request()->routeIs('appointments.create') ? 'bg-blue-700' : '' }}">
-                    <i class="fas fa-plus w-6"></i>
-                    <span>Novo Agendamento</span>
+                <a href="{{ route('clients.index') }}" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 {{ request()->routeIs('clients.*') ? 'bg-blue-700' : '' }}">
+                    <i class="fas fa-users w-6"></i>
+                    <span>Servidores</span>
                 </a>
             </li>
             <li>
-                <a href="{{ route('clients.index') }}" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 {{ request()->routeIs('clients.*') ? 'bg-blue-700' : '' }}">
-                    <i class="fas fa-users w-6"></i>
-                    <span>Clientes</span>
+                <a href="{{ route('appointments.create') }}" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 {{ request()->routeIs('appointments.create') ? 'bg-blue-700' : '' }}">
+                    <i class="fas fa-plus w-6"></i>
+                    <span>Novo Agendamento</span>
                 </a>
             </li>
         </ul>

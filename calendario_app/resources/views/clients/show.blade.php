@@ -7,6 +7,9 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-semibold text-gray-800">Ficha do Cliente</h2>
         <div class="flex space-x-2">
+            <a href="{{ route('clients.print_form', $client->id) }}" class="bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 inline-flex items-center" target="_blank">
+                <i class="fas fa-print mr-2"></i> Imprimir Ficha
+            </a>
             <a href="{{ route('clients.edit', $client->id) }}" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 inline-flex items-center">
                 <i class="fas fa-edit mr-2"></i> Editar
             </a>

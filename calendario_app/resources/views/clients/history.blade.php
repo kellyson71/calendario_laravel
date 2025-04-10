@@ -116,7 +116,7 @@
 
     <div class="mt-6 flex justify-end">
         <a href="{{ route('clients.index') }}" class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 inline-flex items-center">
-            <i class="fas fa-arrow-left mr-2"></i> Voltar para Clientes
+            <i class="fas fa-arrow-left mr-2"></i> Voltar para Servidores
         </a>
     </div>
 </div>

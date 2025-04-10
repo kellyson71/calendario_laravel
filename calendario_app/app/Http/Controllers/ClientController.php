@@ -23,9 +23,15 @@ class ClientController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        return view('clients.create');
+        // Verifica se há um nome pré-definido vindo do formulário de agendamento
+        $name = $request->query('name');
+
+        // Adicionar redirect_to como query string se existir
+        $redirect_to = $request->query('redirect_to', '');
+
+        return view('clients.create', compact('name', 'redirect_to'));
     }
 
     /**
@@ -45,7 +51,13 @@ class ClientController extends Controller
 
         $validatedData['user_id'] = auth()->id();
 
-        Client::create($validatedData);
+        $client = Client::create($validatedData);
+
+        // Verificar se há um parâmetro de redirecionamento
+        if ($request->filled('redirect_to') && $request->input('redirect_to') === 'appointments.create') {
+            return redirect()->route('appointments.create', ['client_id' => $client->id])
+                ->with('success', 'Cliente cadastrado com sucesso!');
+        }
 
         return redirect()->route('clients.index')
             ->with('success', 'Cliente cadastrado com sucesso!');
@@ -143,5 +155,25 @@ class ClientController extends Controller
             ->paginate(10);
 
         return view('clients.history', compact('client', 'appointments'));
+    }
+
+    /**
+     * Display a printable client form.
+     */
+    public function printForm(Client $client)
+    {
+        // Verificar se o cliente pertence ao usuário atual
+        if ($client->user_id !== auth()->id()) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
+        // Buscar os agendamentos deste cliente
+        $appointments = Appointment::where('client_id', $client->id)
+            ->orderBy('date', 'desc')
+            ->orderBy('start_time')
+            ->take(5)
+            ->get();
+
+        return view('clients.print_form', compact('client', 'appointments'));
     }
 }
